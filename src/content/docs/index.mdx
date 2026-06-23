@@ -3,13 +3,13 @@ title: Create a Multi-level Navbar and Footer with React and Storyblok
 description: Create a multi-level navbar and footer shared between all pages of your website.
 ---
 
-In this tutorial we'll create a multi-level navigation bar (navbar) and footer shared between all pages of your website.
+This tutorial covers how to create a multi-level navigation bar (navbar) and footer shared between all pages of your website.
 
 ![The end result of the tutorial, composed of a sample React application with a navbar and a footer managed in Storyblok.](~/assets/images/tutorial-end-result.png)
 
-After finishing this tutorial, you will be able to create, edit, and delete navbar entries and sub-entries in the Storyblok Visual Editor, as well as configure the entries in your website footer.
+After you complete this tutorial, you will be able to create, edit, and delete navbar entries and sub-entries in the Storyblok Visual Editor, as well as configure the entries in your website footer.
 
-The configuration of the navbar and the footer will be defined in a single location so that any changes to these components will automatically affect your entire website.
+The configuration of the navbar and the footer will be defined in a single location so that any changes to these components automatically affect your entire website.
 
 :::note
 
@@ -25,7 +25,7 @@ This tutorial has been tested with the following package versions in Node.js v24
 
 ## General steps
 
-In this tutorial we'll perform the following steps:
+In this tutorial you will perform the following steps:
 
 1. Create a new Storyblok space from a Blueprint
 1. Create the content model
@@ -76,10 +76,10 @@ In the [block library](https://www.storyblok.com/docs/concepts/blocks), create t
 - `nav_submenu`
   - `title`: [text field](https://www.storyblok.com/docs/concepts/fields#text)
   - `items`: [blocks field](https://www.storyblok.com/docs/concepts/fields#blocks), configured to only allow blocks `nav_entry` and `nav_submenu`
-- footer_entry
+- `footer_entry`
   - `title`: [text field](https://www.storyblok.com/docs/concepts/fields#text)
   - `link`: [link field](https://www.storyblok.com/docs/concepts/fields#link)
-- footer_submenu
+- `footer_submenu`
   - `title`: [text field](https://www.storyblok.com/docs/concepts/fields#text)
   - `items`: [blocks field](https://www.storyblok.com/docs/concepts/fields#blocks), configured to only allow blocks `footer_entry` and `footer_submenu`
 
@@ -89,7 +89,7 @@ Still in the block library, create the `config` content type:
   - `nav_items`: [blocks field](https://www.storyblok.com/docs/concepts/fields#blocks), configured to only allow blocks `nav_entry` and `nav_submenu`.
   - `footer_items`: [blocks field](https://www.storyblok.com/docs/concepts/fields#blocks), configured to only allow blocks `footer_entry` and `footer_submenu`.
 
-Later, we'll create a [story](https://www.storyblok.com/docs/manuals/stories) based on this content type to hold the global navbar and footer configuration.
+Later, you will create a [story](https://www.storyblok.com/docs/manuals/stories) based on this content type to hold the global navbar and footer configuration.
 
 :::tip
 If you're unfamiliar with content modeling in Storyblok, refer to [Blocks](https://www.storyblok.com/docs/concepts/blocks) and [Fields](https://www.storyblok.com/docs/concepts/fields) for more information.
@@ -97,7 +97,7 @@ If you're unfamiliar with content modeling in Storyblok, refer to [Blocks](https
 
 ## 3. Set up additional application dependencies
 
-In our application we'll use the [Preline UI](https://preline.co/) library for the navbar. Preline UI is an open-source Tailwind CSS UI component library for building modern websites and apps. Preline UI requires [Tailwind CSS](https://tailwindcss.com/).
+The application will use the [Preline UI](https://preline.co/) library for the navbar. Preline UI is an open-source Tailwind CSS UI component library for building modern websites and apps. Preline UI requires [Tailwind CSS](https://tailwindcss.com/).
 
 Install these additional dependencies:
 
@@ -221,7 +221,7 @@ body {
 Next, add the React component counterparts for the Storyblok blocks you already created.
 
 :::tip  
-Eager to see the complete implementation already? Take a look at the [tutorial repository on GitHub](https://github.com/pedromiguelsousa/doc-eng-sample-app).
+For the complete implementation, refer to the [tutorial repository on GitHub](https://github.com/pedromiguelsousa/doc-eng-sample-app).
 :::
 
 Create the following files in the `src/storyblok/` folder:
@@ -414,7 +414,7 @@ export default function FooterSubmenu({ blok, topLevelNav = true }) {
 }
 ```
 
-Next, we need to register these components in `src/main.jsx`:
+Next, you need to register these components in `src/main.jsx`:
 
 ```diff lang="jsx" title="src/main.jsx"
   import { StrictMode } from 'react';
@@ -459,7 +459,7 @@ Next, we need to register these components in `src/main.jsx`:
   // (...rest of the file)
 ```
 
-Let's create a couple of auxiliary components to group navbar and footer items (`Navbar` and `Footer`, respectively). Having these separate components allow us to define the styling for the entire navbar and footer.
+Create two auxiliary components to group navbar and footer items (`Navbar` and `Footer`, respectively). Having these separate components allows you to define the styling for the entire navbar and footer.
 
 ```jsx title="src/storyblok/Navbar.jsx"
 import NavEntry from "./NavEntry";
@@ -578,10 +578,10 @@ export default function Footer({ config: configData }) {
 }
 ```
 
-We use the same React components in the navbar to support both top-level and child-level entries; the same applies to the footer components. Since we require different HTML elements and CSS styles for top-level entries, we added a prop to these four React components so that we can specify which components are at the top level.
+The same React components in the navbar support both top-level and child-level entries; the same applies to the footer components. Since different HTML elements and CSS styles are required for top-level entries, a prop on these four React components specifies which components are at the top level.
 
 :::tip
-While we could have different elements (and blocks) for the two different contexts, this strategy allows us to reduce the number of React components and the number of different blocks in your Storyblok space.
+While you could use different elements (and blocks) for the two different contexts, this strategy reduces the number of React components and the number of different blocks in your Storyblok space.
 :::
 
 ## 5. Add content in Storyblok
@@ -609,15 +609,15 @@ The Visual Editor displays the top-level entries of the navbar. You can select t
 
 ![The Visual Editor with a Navbar Submenu selected.](~/assets/images/navbar-in-visual-editor.png)
 
-To finalize our configuration, add some sample entries to the footer. Add Footer Entry or Footer Submenu blocks to the **Footer Items** field. The configuration is similar to the navbar configuration, but the footer only supports one level of submenus instead of nested submenus.
+To finalize the configuration, add some sample entries to the footer. Add Footer Entry or Footer Submenu blocks to the **Footer Items** field. The configuration is similar to the navbar configuration, but the footer only supports one level of submenus instead of nested submenus.
 
 ## 6. Load navbar and footer configuration
 
-Now that we've configured the content of the navbar and the footer, we need to load their configuration in our application by loading the `config` story.
+Now that the content of the navbar and the footer is configured, load their configuration in the application by loading the `config` story.
 
 Edit the `src/App.jsx` file to load the navbar and footer configuration only once via `useEffect()`. The configuration is then passed as props to the `Navbar` and `Footer` components.
 
-```diff lang="jsx" title="source/App.jsx"
+```diff lang="jsx" title="src/App.jsx"
   import {
   	StoryblokComponent,
   	useStoryblok,
@@ -671,9 +671,9 @@ Edit the `src/App.jsx` file to load the navbar and footer configuration only onc
 ```
 
 :::note
-To keep things simple, we fetch the draft version of our content. In production, you would want to fetch only published content. Learn more in our [tutorial on creating preview and production deployments](https://www.storyblok.com/tp/create-preview-production-environments-and-deploy).
+The code in this tutorial fetches the draft version of the content. In production, fetch only published content. Learn more in the [tutorial on creating preview and production deployments](https://www.storyblok.com/tp/create-preview-production-environments-and-deploy).
 :::
 
 ## Wrap up
 
-Congratulations! You've successfully built a Storyblok + React website with a multi-level navbar and a footer that you can configure in the Storyblok Visual Editor.
+Congratulations! You have successfully built a Storyblok + React website with a multi-level navbar and a footer that you can configure in the Storyblok Visual Editor.
