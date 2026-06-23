@@ -150,7 +150,8 @@ Next, initialize the Preline UI runtime behavior in `src/App.jsx`:
 + 	useEffect(() => {
 + 		HSStaticMethods.autoInit();
 + 	}, [location.pathname, story?.content]);
-// (...rest of the file)
+
+// ...
 ```
 
 Edit the `src/index.css` to make some adjustments to the CSS:
@@ -456,7 +457,8 @@ Next, you need to register these components in `src/main.jsx`:
 + 		footer_submenu: FooterSubmenu,
   	},
   });
-  // (...rest of the file)
+
+  // ...
 ```
 
 Create two auxiliary components to group navbar and footer items (`Navbar` and `Footer`, respectively). Having these separate components allows you to define the styling for the entire navbar and footer.
