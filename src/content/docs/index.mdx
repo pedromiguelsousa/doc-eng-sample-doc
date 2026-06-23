@@ -605,23 +605,37 @@ While you could use different elements (and blocks) for the two different contex
 
 ## 5. Add content in Storyblok
 
+Before proceeding, make sure that you have started the local web server for your React app using the following command:
+
+```bash
+npm run dev
+```
+
+Next, update your preview URL in Storyblock so that it points to your local web server (`https://localhost:5173/` by default). 
+
+1. Open **Settings** → **Visual Editor**.
+1. Under **Preview URLs**, enter `Dev` in **Name** and your preview URL in **Location**.
+1. Select **Save**.
+1. In the Visual Editor, change the preview URL to the development URL you just defined.
+
 In Storyblok, create a new story based on the `config` content type you created earlier.
 
 1. Switch to the **Content** tab.
-1. In the **Content browser** sidebar, select **Create new content** > **Story**.
+1. Select **Create new content** → **Story**.
 1. In **Name**, enter `Config`.
 1. In **Content type**, select _Config_.
 1. Select **Create**.
 
-Next, add some sample entries to the navbar.
+Next, add some entries to the navbar.
 
+1. In the **Content** tab, select the Config story.
 1. If necessary, open the **Edit** sidebar.
 1. Under **Nav Items**, select **Add Block**.
 1. Select the desired block:
    - To add a basic entry with a title and a link, select the **Nav Entry** block. You can link to external URLs or to existing Storyblok stories.
    - To add a new navbar menu, select **Nav Submenu**. You will need to provide an entry title and the menu items. To add another level of submenus, add a Nav Submenu as a nested block.
-1. Configure the block fields as needed.
-1. Add other sample navigation entries. Use different blocks (Nav Entry or Nav Submenu) at different levels to explore all the possibilities of the navbar.
+1. Expand the block details and configure the fields as needed.
+1. Add more navigation entries. Use different blocks (Nav Entry or Nav Submenu) at different levels to explore all the possibilities of the navbar.
 1. Select **Save**.
 
 The Visual Editor displays the top-level entries of the navbar. You can select them to expand any submenus you have created. Select one of the entries to edit the fields in the sidebar.
