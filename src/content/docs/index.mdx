@@ -108,50 +108,50 @@ npm install tailwindcss @tailwindcss/vite preline
 Edit the `vite.config.js` file in your project and add the `@tailwindcss/vite` plugin to your configuration.
 
 ```diff lang="js" title="vite.config.js"
-  import { defineConfig, loadEnv } from "vite";
-  import react from "@vitejs/plugin-react";
-  import mkcert from "vite-plugin-mkcert";
-+ import tailwindcss from "@tailwindcss/vite";
+import { defineConfig, loadEnv } from "vite";
+import react from "@vitejs/plugin-react";
+import mkcert from "vite-plugin-mkcert";
++import tailwindcss from "@tailwindcss/vite";
 
-  // https://vite.dev/config/
-  export default defineConfig(({ mode }) => {
-    const env = loadEnv(mode, process.cwd(), "");
-    return {
--     plugins: [react(), mkcert()],
-+     plugins: [react(), mkcert(), tailwindcss()],
-      define: {
-        "import.meta.env.STORYBLOK_DELIVERY_API_TOKEN": JSON.stringify(
-          env.STORYBLOK_DELIVERY_API_TOKEN,
-        ),
-        "import.meta.env.STORYBLOK_API_BASE_URL": JSON.stringify(
-          env.STORYBLOK_API_BASE_URL,
-        ),
-      },
-    };
-  });
+// https://vite.dev/config/
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  return {
+-   plugins: [react(), mkcert()],
++   plugins: [react(), mkcert(), tailwindcss()],
+    define: {
+      "import.meta.env.STORYBLOK_DELIVERY_API_TOKEN": JSON.stringify(
+        env.STORYBLOK_DELIVERY_API_TOKEN,
+      ),
+      "import.meta.env.STORYBLOK_API_BASE_URL": JSON.stringify(
+        env.STORYBLOK_API_BASE_URL,
+      ),
+    },
+  };
+});
 ```
 
 Next, initialize the Preline UI runtime behavior in `src/App.jsx`:
 
 ```diff lang="jsx" title="src/App.jsx"
-- import { useParams } from 'react-router';
-+ import { useParams, useLocation } from 'react-router';
-+ import { useEffect } from 'react';
-+ import { HSStaticMethods } from "preline/non-auto";
+import { StoryblokComponent, useStoryblok } from '@storyblok/react';
+-import { useParams } from 'react-router';
++import { useParams, useLocation } from 'react-router';
++import { useEffect } from 'react';
++import { HSStaticMethods } from "preline/non-auto";
 
-  export default function App() {
-  	const { '*': slug } = useParams();
-+ 	const location = useLocation();
-
-  	const story = useStoryblok(slug || 'home', {
-  		version: 'draft',
-  	});
-
-+ 	useEffect(() => {
-+ 		HSStaticMethods.autoInit();
-+ 	}, [location.pathname, story?.content]);
-
-// ...
+export default function App() {
+	const currentYear = new Date().getFullYear();
+	const { '*': slug } = useParams();
++	const location = useLocation();
+	const story = useStoryblok(slug || 'home', {
+		version: 'draft',
+	});
++
++	useEffect(() => {
++		HSStaticMethods.autoInit();
++	}, [location.pathname, story?.content]);
+	// ...
 ```
 
 Edit the `src/index.css` to make some adjustments to the CSS:
@@ -638,11 +638,12 @@ Next, add some entries to the navbar.
 1. Add more navigation entries. Use different blocks (Nav Entry or Nav Submenu) at different levels to explore all the possibilities of the navbar.
 1. Select **Save**.
 
-The Visual Editor displays the top-level entries of the navbar. You can select them to expand any submenus you have created. Select one of the entries to edit the fields in the sidebar.
 
-![The Visual Editor with a Nav Submenu selected.](~/assets/images/navbar-in-visual-editor.png)
+To finalize the configuration, add some entries to the footer. Add Footer Entry or Footer Submenu blocks to the **Footer Items** field. The configuration is similar to the navbar configuration, but the footer only supports one level of submenus instead of nested submenus.
 
-To finalize the configuration, add some sample entries to the footer. Add Footer Entry or Footer Submenu blocks to the **Footer Items** field. The configuration is similar to the navbar configuration, but the footer only supports one level of submenus instead of nested submenus.
+:::note
+You must load the navbar and footer configuration in your application before you can see any changes in the Visual Editor. You will do this in the next section.
+:::
 
 ## 6. Load navbar and footer configuration
 
@@ -651,61 +652,65 @@ Now that the content of the navbar and the footer is configured, load their conf
 Edit the `src/App.jsx` file to load the navbar and footer configuration only once via `useEffect()`. The configuration is then passed as props to the `Navbar` and `Footer` components.
 
 ```diff lang="jsx" title="src/App.jsx"
-  import {
-  	StoryblokComponent,
-  	useStoryblok,
-  	useStoryblokApi,
-  } from '@storyblok/react';
-  import { useParams, useLocation } from 'react-router';
-  import { useState, useEffect } from 'react';
-  import Navbar from './storyblok/Navbar';
-  import Footer from './storyblok/Footer';
+import {
+	StoryblokComponent,
+	useStoryblok,
+	useStoryblokApi,
+} from '@storyblok/react';
+import { useParams, useLocation } from 'react-router';
+-import { useEffect } from 'react';
++import { useEffect, useState } from 'react';
+import { HSStaticMethods } from "preline/non-auto";
++import Navbar from './storyblok/Navbar';
++import Footer from './storyblok/Footer';
 
-  import { HSStaticMethods } from "preline/non-auto";
-
-  export default function App() {
-  	const { '*': slug } = useParams();
-  	const location = useLocation();
-
-+ 	const [configData, setConfigData] = useState(null);
-
-+  	// header/footer loader
-+  	const storyblokApi = useStoryblokApi();
-+  	useEffect(() => {
-+  		async function loadConfig() {
-+  			const resp = await storyblokApi.get('cdn/stories/config', {
-+  				version: 'draft',
-+  			});
-+  			setConfigData(resp.data);
-+  		}
-+  		loadConfig();
-+  	}, [storyblokApi]);
+export default function App() {
+-	const currentYear = new Date().getFullYear();
+  const { '*': slug } = useParams();
+  const location = useLocation();
++	const [configData, setConfigData] = useState(null);
 +
-  	const story = useStoryblok(slug || 'home', {
-  		version: 'draft',
-  	});
++	// header/footer loader
++	const storyblokApi = useStoryblokApi();
++	useEffect(() => {
++		async function loadConfig() {
++			const resp = await storyblokApi.get('cdn/stories/config', {
++				version: 'draft',
++			});
++			setConfigData(resp.data);
++		}
++		loadConfig();
++	}, [storyblokApi]);
++
+	const story = useStoryblok(slug || 'home', {
+		version: 'draft',
+	});
 
-  	useEffect(() => {
-  		HSStaticMethods.autoInit();
-  	}, [location.pathname, story?.content]);
+	useEffect(() => {
+		HSStaticMethods.autoInit();
+	}, [location.pathname, story?.content]);
 
-  	if (!story?.content) {
-  		return <div>Loading...</div>;
-  	}
-  	return (
-  		<>
-+ 			<Navbar config={configData} />
-  			<StoryblokComponent blok={story.content} />
-- 			<footer>All rights reserved © {currentYear}</footer>
-+ 			<Footer config={configData} />
-  		</>
-  	);
-  }
+	if (!story?.content) {
+		return <div>Loading...</div>;
+	}
+	return (
+		<>
++			<Navbar config={configData} />
+  		<StoryblokComponent blok={story.content} />
+-			<footer>All rights reserved © {currentYear}</footer>
++			<Footer config={configData} />
+  	</>
+  );
+}
 ```
 
 :::note
 The code in this tutorial fetches the draft version of the content. In production, fetch only published content. Learn more in the [tutorial on creating preview and production deployments](https://www.storyblok.com/tp/create-preview-production-environments-and-deploy).
 :::
+
+After making these changes, the Storyblok Visual Editor shows the top-level entries of the navbar and any footer entries you have configured. You can select a navbar entry to expand any submenus. Select one of the navbar or footer entries to edit the fields in the sidebar.
+
+![The Visual Editor with a Nav Submenu selected.](~/assets/images/navbar-in-visual-editor.png)
 
 ## Wrap up
 
