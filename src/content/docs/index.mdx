@@ -611,12 +611,12 @@ Before proceeding, make sure that you have started the local web server for your
 npm run dev
 ```
 
-Next, update your preview URL in Storyblock so that it points to your local web server (`https://localhost:5173/` by default). 
+Next, update your preview URL in Storyblock so that it points to your local web server (`https://localhost:5173/` by default):
 
 1. Open **Settings** → **Visual Editor**.
 1. Under **Preview URLs**, enter `Dev` in **Name** and your preview URL in **Location**.
 1. Select **Save**.
-1. In the Visual Editor, change the preview URL to the development URL you just defined.
+1. In the Visual Editor, change the preview URL to the development URL named `Dev` you defined.
 
 In Storyblok, create a new story based on the `config` content type you created earlier.
 
@@ -708,7 +708,7 @@ export default function App() {
 The code in this tutorial fetches the draft version of the content. In production, fetch only published content. Learn more in the [tutorial on creating preview and production deployments](https://www.storyblok.com/tp/create-preview-production-environments-and-deploy).
 :::
 
-After making these changes, the Storyblok Visual Editor shows the top-level entries of the navbar and any footer entries you have configured. You can select a navbar entry to expand any submenus. Select one of the navbar or footer entries to edit the fields in the sidebar.
+After making these changes, the Storyblok Visual Editor shows the top-level entries of the navbar and any footer entries you have configured. You can expand existing navbar submenus to show additional navigation items. Select one of the navbar or footer entries to edit the fields in the sidebar.
 
 ![The Visual Editor with a Nav Submenu selected.](~/assets/images/navbar-in-visual-editor.png)
 
