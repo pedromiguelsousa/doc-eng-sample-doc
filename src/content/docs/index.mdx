@@ -1,40 +1,680 @@
 ---
-title: Welcome to Starlight
-description: Get started building your docs site with Starlight.
-template: splash # Remove or comment out this line to display the site sidebar on this page.
-hero:
-  tagline: Congrats on setting up a new Starlight project!
-  image:
-    file: ../../assets/houston.webp
-  actions:
-    - text: Example Guide
-      link: /guides/example/
-      icon: right-arrow
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
-      icon: external
-      variant: minimal
+title: Create a multi-level navbar and footer with React and Storyblok
+description: Create a multi-level navbar and footer shared between all pages of your website.
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+In this tutorial we'll create a multi-level navigation bar (navbar) and footer shared between all pages of your website.
 
-## Next steps
+![The end result of the tutorial, composed of a sample React application with a navbar and a footer managed in Storyblok.](~/assets/images/tutorial-end-result.png)
 
-<CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
-	</Card>
-	<Card title="Change page layout" icon="document">
-		Delete `template: splash` in `src/content/docs/index.mdx` to display a
-		sidebar on this page.
-	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
-	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
-	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
-	</Card>
-</CardGrid>
+After finishing this tutorial, you will be able to create, edit, and delete navbar entries and sub-entries in the Storyblok Visual Editor, as well as configure the entries in your website footer.
+
+The configuration of the navbar and the footer will be defined in a single location so that any changes to these components will automatically affect your entire website.
+
+:::note
+
+This tutorial has been tested with the following package versions in Node.js v24.16.0:
+
+- `react@19.2.7`
+- `react-dom@19.2.7`
+- `@storyblok/react@5.0.0`
+- `tailwind@4.3.1`
+- `preline@4.2.0`
+
+:::
+
+## General steps
+
+In this tutorial we'll perform the following steps:
+
+1. Create a new Storyblok space from a Blueprint
+1. Create the content model
+1. Set up additional application dependencies
+1. Create React components in your application
+1. Add content in Storyblok
+1. Load navbar and footer configuration
+
+Refer to the following sections for step-by-step instructions.
+
+## 1. Create a new Storyblok space from a Blueprint
+
+First, create a new blank Storyblok space based on the [Storyblok Core Blueprint for React](https://github.com/storyblok/blueprint-core-react). For instructions on launching a new project using a Storyblok Blueprint, refer to [Blueprints](https://www.storyblok.com/docs/concepts/blueprints).
+
+After setting up your Storyblok space and GitHub repository, clone your repository locally and set up your access token.
+
+### Set up access token
+
+In the root of the project, create a copy of the `.env.example` file and rename it to `.env`.
+
+In Storyblok, copy your space's preview [access token](https://www.storyblok.com/docs/concepts/access-tokens) from **Settings** > **Access Tokens** and then enter your access token in the `.env` file:
+
+```ini title=".env" "<REPLACE_WITH_YOUR_TOKEN>"
+STORYBLOK_DELIVERY_API_TOKEN=<REPLACE_WITH_YOUR_TOKEN>
+STORYBLOK_REGION=<REPLACE_WITH_SPACE_REGION>
+```
+
+### Enter your space region
+
+Still in the `.env` file, enter a region value in `STORYBLOK_REGION` or delete the entire line if your space region is the EU (the default region value is defined as `eu` in `src/main.jsx`).
+
+```ini title=".env" "<REPLACE_WITH_SPACE_REGION>"
+STORYBLOK_DELIVERY_API_TOKEN=<REPLACE_WITH_YOUR_TOKEN>
+STORYBLOK_REGION=<REPLACE_WITH_SPACE_REGION>
+```
+
+For more information, refer to [The region parameter](https://www.storyblok.com/docs/libraries/js/js-sdk#the-region-parameter) in the JavaScript SDK documentation.
+
+## 2. Create the content model
+
+Customize the Storyblok content model according to the use case of this tutorial.
+
+In the [block library](https://www.storyblok.com/docs/concepts/blocks), create the following nestable blocks:
+
+- `nav_entry`
+  - `title`: [text field](https://www.storyblok.com/docs/concepts/fields#text)
+  - `link`: [link field](https://www.storyblok.com/docs/concepts/fields#link)
+- `nav_submenu`
+  - `title`: [text field](https://www.storyblok.com/docs/concepts/fields#text)
+  - `items`: [blocks field](https://www.storyblok.com/docs/concepts/fields#blocks), configured to only allow blocks `nav_entry` and `nav_submenu`
+- footer_entry
+  - `title`: [text field](https://www.storyblok.com/docs/concepts/fields#text)
+  - `link`: [link field](https://www.storyblok.com/docs/concepts/fields#link)
+- footer_submenu
+  - `title`: [text field](https://www.storyblok.com/docs/concepts/fields#text)
+  - `items`: [blocks field](https://www.storyblok.com/docs/concepts/fields#blocks), configured to only allow blocks `footer_entry` and `footer_submenu`
+
+Still in the block library, create the `config` content type:
+
+- `config`
+  - `nav_items`: [blocks field](https://www.storyblok.com/docs/concepts/fields#blocks), configured to only allow blocks `nav_entry` and `nav_submenu`.
+  - `footer_items`: [blocks field](https://www.storyblok.com/docs/concepts/fields#blocks), configured to only allow blocks `footer_entry` and `footer_submenu`.
+
+Later, we'll create a [story](https://www.storyblok.com/docs/manuals/stories) based on this content type to hold the global navbar and footer configuration.
+
+:::tip
+If you're unfamiliar with content modeling in Storyblok, refer to [Blocks](https://www.storyblok.com/docs/concepts/blocks) and [Fields](https://www.storyblok.com/docs/concepts/fields) for more information.
+:::
+
+## 3. Set up additional application dependencies
+
+In our application we'll use the [Preline UI](https://preline.co/) library for the navbar. Preline UI is an open-source Tailwind CSS UI component library for building modern websites and apps. Preline UI requires [Tailwind CSS](https://tailwindcss.com/).
+
+Install these additional dependencies:
+
+```bash
+npm install tailwindcss @tailwindcss/vite preline
+```
+
+Edit the `vite.config.ts` file in your project and add the `@tailwindcss/vite` plugin to your configuration.
+
+```diff lang="js" title="vite.config.ts"
+  import { defineConfig, loadEnv } from "vite";
+  import react from "@vitejs/plugin-react";
+  import mkcert from "vite-plugin-mkcert";
++ import tailwindcss from "@tailwindcss/vite";
+
+  // https://vite.dev/config/
+  export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, process.cwd(), "");
+    return {
+-     plugins: [react(), mkcert()],
++     plugins: [react(), mkcert(), tailwindcss()],
+      define: {
+        "import.meta.env.STORYBLOK_DELIVERY_API_TOKEN": JSON.stringify(
+          env.STORYBLOK_DELIVERY_API_TOKEN,
+        ),
+        "import.meta.env.STORYBLOK_API_BASE_URL": JSON.stringify(
+          env.STORYBLOK_API_BASE_URL,
+        ),
+      },
+    };
+  });
+```
+
+Next, initialize the Preline UI runtime behavior in `src/App.jsx`:
+
+```diff lang="js" title="src/App.jsx"
+- import { useParams } from 'react-router';
++ import { useParams, useLocation } from 'react-router';
++ import { useEffect } from 'react';
++ import { HSStaticMethods } from "preline/non-auto";
+
+  export default function App() {
+  	const { '*': slug } = useParams();
++ 	const location = useLocation();
+
+  	const story = useStoryblok(slug || 'home', {
+  		version: 'draft',
+  	});
+
++ 	useEffect(() => {
++ 		HSStaticMethods.autoInit();
++ 	}, [location.pathname, story?.content]);
+// (...rest of the file)
+```
+
+Edit the `src/index.css` to make some adjustments to the CSS:
+
+- Remove the `@import` for the original blueprint styling.
+- Add an `@import` for Tailwind CSS.
+- Recreate some of the original formatting directly in the `src/index.css` file.
+- Add a few `@import` and `@source` statements required by Preline UI.
+
+The full content of the `src/index.css` file is shown below:
+
+```css title="src/index.css"
+@import "https://a.storyblok.com/f/212319/x/e6ccda03b8/blueprint-blank.css";
+@import "tailwindcss";
+
+:root {
+  --light: #fcfcfc;
+  --dark: #1f1f1f;
+  --text: light-dark(var(--dark), var(--light));
+  --surface: light-dark(var(--light), var(--dark));
+  --accent: #ebe8ff;
+  --accent-dark: #184db5;
+}
+
+body {
+  margin: 0 auto;
+  padding: 1rem;
+  font-size: clamp(1rem, -0.5vw + 1.3rem, 1.2rem);
+  text-rendering: optimizeSpeed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-wrap: pretty;
+  max-width: 65rem;
+}
+
+.teaser {
+  color: var(--dark);
+  background-color: var(--accent);
+  border-radius: 24px;
+  text-align: center;
+  margin-top: 2rem;
+  padding: 4rem 1rem;
+}
+
+.my-grid {
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 2rem;
+}
+
+.feature {
+  padding: 2rem;
+  background-color: hsl(from var(--light) h s calc(l - 3));
+  color: var(--dark);
+  text-align: center;
+  font-weight: 600;
+}
+
+@import "../node_modules/preline/variants.css";
+@source "../node_modules/preline/dist/*.js";
+
+/* Preline Themes */
+@import "../node_modules/preline/css/themes/theme.css";
+```
+
+## 4. Create React components in your application
+
+Next, add the React component counterparts for the Storyblok blocks you already created.
+
+:::tip  
+Eager to see the complete implementation already? Take a look at the [tutorial repository on GitHub](https://github.com/pedromiguelsousa/doc-eng-sample-app).
+:::
+
+Create the following files in the `src/storyblok/` folder:
+
+```jsx title="src/storyblok/NavEntry.jsx"
+import { storyblokEditable } from "@storyblok/react";
+
+export default function NavEntry({ blok, topLevelNav = false }) {
+  let url =
+    blok.link?.linktype == "story"
+      ? `/${blok.link.cached_url}`
+      : blok.link?.url || "#";
+
+  if (topLevelNav) {
+    return (
+      <a
+        {...storyblokEditable(blok)}
+        className="text-sm text-navbar-nav-foreground hover:text-primary-hover focus:outline-hidden focus:text-primary-focus"
+        href={url}
+      >
+        {blok.title}
+      </a>
+    );
+  } else {
+    return (
+      <a
+        {...storyblokEditable(blok)}
+        className="flex items-center gap-x-3.5 py-2 px-3 rounded-lg text-sm text-dropdown-item-foreground hover:bg-dropdown-item-hover focus:outline-hidden focus:bg-dropdown-item-focus"
+        href={url}
+      >
+        {blok.title}
+      </a>
+    );
+  }
+}
+```
+
+```jsx title="src/storyblok/NavSubmenu.jsx"
+import { StoryblokComponent, storyblokEditable } from "@storyblok/react";
+
+export default function NavSubmenu({ blok, topLevelNav = false }) {
+  if (topLevelNav) {
+    return (
+      <div
+        {...storyblokEditable(blok)}
+        className="hs-dropdown [--strategy:static] sm:[--strategy:fixed] [--adaptive:none] sm:[--adaptive:adaptive]"
+      >
+        <button
+          id={blok._uid}
+          type="button"
+          className="hs-dropdown-toggle flex items-center w-full text-sm text-navbar-nav-foreground hover:text-primary-hover focus:outline-hidden focus:text-primary-focus"
+          aria-haspopup="menu"
+          aria-expanded="false"
+          aria-label="Mega Menu"
+        >
+          {blok.title}
+          <svg
+            className="hs-dropdown-open:-rotate-180 sm:hs-dropdown-open:rotate-0 duration-300 ms-1 shrink-0 size-4"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </button>
+
+        <div
+          className="hs-dropdown-menu transition-[opacity,margin] ease-in-out duration-150 hs-dropdown-open:opacity-100 opacity-0 sm:w-48 z-10 sm:bg-dropdown sm:border sm:border-dropdown-line sm:shadow-md rounded-lg p-1 space-y-1 before:absolute top-full before:-top-5 before:inset-s-0 before:w-full before:h-5 hidden"
+          role="menu"
+          aria-orientation="vertical"
+          aria-labelledby={blok._uid}
+        >
+          {blok.items.map((item) => (
+            <StoryblokComponent key={item._uid} blok={item} />
+          ))}
+        </div>
+      </div>
+    );
+  } else {
+    return (
+      <div
+        {...storyblokEditable(blok)}
+        className="hs-dropdown [--strategy:static] sm:[--strategy:absolute] [--adaptive:none] relative"
+      >
+        <button
+          id={blok._uid}
+          type="button"
+          className="hs-dropdown-toggle w-full flex justify-between items-center text-sm text-dropdown-item-foreground rounded-lg py-2 px-3 hover:bg-dropdown-item-hover focus:outline-hidden focus:bg-dropdown-item-focus"
+        >
+          {blok.title}
+          <svg
+            className="hs-dropdown-open:-rotate-180 sm:hs-dropdown-open:-rotate-90 sm:-rotate-90 duration-300 ms-2 shrink-0 size-4"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </button>
+
+        <div
+          className="hs-dropdown-menu transition-[opacity,margin] ease-in-out duration-150 hs-dropdown-open:opacity-100 opacity-0 sm:w-48 hidden z-10 sm:mt-2 sm:bg-dropdown sm:border sm:border-dropdown-line sm:shadow-md rounded-lg before:absolute before:-inset-e-5 before:top-0 before:h-full before:w-5 sm:mx-2.5! top-0 inset-e-full"
+          role="menu"
+          aria-orientation="vertical"
+          aria-labelledby={blok._uid}
+        >
+          <div className="p-1 space-y-1">
+            {blok.items.map((item) => (
+              <StoryblokComponent key={item._uid} blok={item} />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+}
+```
+
+```jsx title="src/storyblok/FooterEntry.jsx"
+import { storyblokEditable } from "@storyblok/react";
+
+export default function FooterEntry({ blok, topLevelNav = false }) {
+  let url =
+    blok.link?.linktype == "story"
+      ? `/${blok.link.cached_url}`
+      : blok.link?.url || "#";
+
+  if (topLevelNav) {
+    return (
+      <div className="mb-4" {...storyblokEditable(blok)}>
+        <p className="text-sm mb-3 font-medium ">
+          <a
+            className="underline-offset-4 hover:underline focus:outline-hidden focus:underline"
+            href={url}
+          >
+            ▶ {blok.title}
+          </a>
+        </p>
+      </div>
+    );
+  } else {
+    return (
+      <li {...storyblokEditable(blok)}>
+        <a
+          className="text-sm text-gray-500 underline-offset-4 hover:underline focus:outline-hidden focus:underline"
+          href={url}
+        >
+          {blok.title}
+        </a>
+      </li>
+    );
+  }
+}
+```
+
+```jsx title="src/storyblok/FooterSubmenu.jsx"
+import { StoryblokComponent, storyblokEditable } from "@storyblok/react";
+
+export default function FooterSubmenu({ blok, topLevelNav = true }) {
+  if (topLevelNav) {
+    return (
+      <div {...storyblokEditable(blok)} className="mb-4">
+        <p className="text-sm mb-3 font-medium">{blok.title}</p>
+        {blok.items?.length > 0 && (
+          <ul className="grid gap-y-1">
+            {blok.items.map((item) => (
+              <StoryblokComponent key={item._uid} blok={item} />
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  } else {
+    // Currently not used in footer.
+    // When implementing nested footer submenus, change topLevelNav's default value to false.
+    return null;
+  }
+}
+```
+
+Next, we need to register these components in `src/main.jsx`:
+
+```diff lang="jsx" title="src/main.jsx"
+  import { StrictMode } from 'react';
+  import { createRoot } from 'react-dom/client';
+  import { createBrowserRouter, RouterProvider } from 'react-router';
+
+  import './index.css';
+  import App from './App.jsx';
+  import { storyblokInit, apiPlugin } from '@storyblok/react';
+
+  import Page from './storyblok/Page';
+  import Teaser from './storyblok/Teaser';
+  import Feature from './storyblok/Feature';
+  import Grid from './storyblok/Grid';
++ import NavEntry from './storyblok/NavEntry';
++ import NavSubmenu from './storyblok/NavSubmenu';
++ import FooterEntry from './storyblok/FooterEntry';
++ import FooterSubmenu from './storyblok/FooterSubmenu';
+
+  storyblokInit({
+  	accessToken: import.meta.env.STORYBLOK_DELIVERY_API_TOKEN,
+  	apiOptions: {
+  		/** Set the correct region for your space. Learn more: https://www.storyblok.com/docs/packages/storyblok-js */
+  		region: import.meta.env.STORYBLOK_REGION || 'eu',
+  		/** The following code is only required when creating a Storyblok space directly via the Blueprints feature. */
+  		endpoint: import.meta.env.STORYBLOK_API_BASE_URL
+  			? `${new URL(import.meta.env.STORYBLOK_API_BASE_URL).origin}/v2`
+  			: undefined,
+  	},
+  	use: [apiPlugin],
+  	components: {
+  		page: Page,
+  		teaser: Teaser,
+  		feature: Feature,
+  		grid: Grid,
++ 		nav_entry: NavEntry,
++ 		nav_submenu: NavSubmenu,
++ 		footer_entry: FooterEntry,
++ 		footer_submenu: FooterSubmenu,
+  	},
+  });
+  // (...rest of the file)
+```
+
+Let's create a couple of auxiliary components to group navbar and footer items (`Navbar` and `Footer`, respectively). Having these separate components allow us to define the styling for the entire navbar and footer.
+
+```jsx title="src/storyblok/Navbar.jsx"
+import NavEntry from "./NavEntry";
+import NavSubmenu from "./NavSubmenu";
+
+export default function Navbar({ config: configData }) {
+  const navBarEntries = configData?.story?.content?.nav_items || [];
+
+  return (
+    <header className="relative flex flex-wrap sm:justify-start sm:flex-nowrap w-full py-3 bg-navbar border-b border-navbar-line">
+      <nav className="max-w-340 w-full mx-auto px-4 sm:flex sm:items-center sm:justify-between">
+        <div className="flex items-center justify-between">
+          <a
+            className="flex-none text-xl font-semibold text-foreground focus:outline-hidden focus:opacity-80"
+            href="#"
+            aria-label="Company, Inc"
+          >
+            Company, Inc
+          </a>
+          <div className="sm:hidden">
+            <button
+              type="button"
+              className="hs-collapse-toggle relative size-9 flex justify-center items-center gap-x-2 rounded-lg bg-layer border border-layer-line text-layer-foreground shadow-2xs hover:bg-layer-hover focus:outline-hidden focus:bg-layer-focus disabled:opacity-50 disabled:pointer-events-none"
+              id="hs-navbar-example-collapse"
+              aria-expanded="false"
+              aria-controls="hs-navbar-example"
+              aria-label="Toggle navigation"
+              data-hs-collapse="#hs-navbar-example"
+            >
+              <svg
+                className="hs-collapse-open:hidden shrink-0 size-4"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="3" x2="21" y1="6" y2="6" />
+                <line x1="3" x2="21" y1="12" y2="12" />
+                <line x1="3" x2="21" y1="18" y2="18" />
+              </svg>
+              <svg
+                className="hs-collapse-open:block hidden shrink-0 size-4"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
+              </svg>
+              <span className="sr-only">Toggle navigation</span>
+            </button>
+          </div>
+        </div>
+        <div
+          id="hs-navbar-example"
+          className="hidden hs-collapse overflow-hidden transition-all duration-300 basis-full grow sm:block"
+          aria-labelledby="hs-navbar-example-collapse"
+          role="region"
+        >
+          <div className="flex flex-col gap-5 mt-5 sm:flex-row sm:items-center sm:justify-end sm:mt-0 sm:ps-5">
+            {navBarEntries.map((item) => {
+              if (item.items?.length > 0) {
+                return (
+                  <NavSubmenu key={item._uid} blok={item} topLevelNav={true} />
+                );
+              } else {
+                return (
+                  <NavEntry key={item._uid} blok={item} topLevelNav={true} />
+                );
+              }
+            })}
+          </div>
+        </div>
+      </nav>
+    </header>
+  );
+}
+```
+
+```jsx title="src/storyblok/Footer.jsx"
+import FooterEntry from "./FooterEntry.jsx";
+import FooterSubmenu from "./FooterSubmenu.jsx";
+
+export default function Footer({ config: configData }) {
+  const footerEntries = configData?.story?.content?.footer_items || [];
+
+  return (
+    <>
+      <hr className="my-12 h-0.5 border-t-0 bg-neutral-200" />
+      <div className="grid xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-unset md:grid-flow-col auto-cols-fr gap-x-5 mb-4 mt-4 mx-4">
+        {footerEntries.map((item) => {
+          if (item.items?.length > 0) {
+            return (
+              <FooterSubmenu key={item._uid} blok={item} topLevelNav={true} />
+            );
+          } else {
+            return (
+              <FooterEntry key={item._uid} blok={item} topLevelNav={true} />
+            );
+          }
+        })}
+      </div>
+    </>
+  );
+}
+```
+
+We use the same React components in the navbar to support both top-level and child-level entries; the same applies to the footer elements. Since we require different HTML elements and CSS styles for top-level entries, we added a prop to these four React components so that we can specify which components are at the top level.
+
+:::tip
+While we could have different elements (and blocks) for the two different contexts, this strategy allows us to reduce the number of React components and the number of different blocks in your Storyblok space.
+:::
+
+## 5. Add content in Storyblok
+
+In Storyblok, create a new story based on the `config` content type you created earlier.
+
+1. Switch to the **Content** tab.
+1. In the **Content browser** sidebar, select **Create new content** > **Story**.
+1. In **Name**, enter `Config`.
+1. In **Content type**, select _Config_.
+1. Select **Create**.
+
+Next, add some sample entries to the navbar.
+
+1. If necessary, open the **Edit** sidebar.
+1. Under **Nav Items**, select **Add Block**.
+1. Select the desired block:
+   - To add a basic entry with a title and a link, select the **Nav Entry** block. You can link to external URLs or to existing Storyblok stories.
+   - To add a new navbar menu, select **Nav Submenu**. You will need to provide an entry title and the menu items. You can add another level of submenus by adding a Nav Submenu as a nested block.
+1. Configure the block fields as needed.
+1. Add other sample navigation entries. Use different blocks (Nav Entry or Nav Submenu) at different levels to explore all the possibilities of the navbar.
+1. Select **Save**.
+
+The Visual Editor displays the top-level entries of the navbar. You can select them to expand any submenus you have created. Select one of the entries to edit the fields in the sidebar.
+
+![The Visual Editor with a Navbar Submenu selected.](~/assets/images/navbar-in-visual-editor.png)
+
+To finalize our configuration, add some sample entries to the footer. Add Footer Entry or Footer Submenu blocks to the **Footer Items** field. The configuration is similar to the navbar configuration, but the footer only supports one level of submenus instead of nested submenus.
+
+## 6. Load navbar and footer configuration
+
+Now that we've configured the content of the navbar and the footer, we need to load their configuration in our application by loading the `config` story.
+
+Edit the `src/App.jsx` file to load the navbar and footer configuration only once via `useEffect()`. The configuration is then passed as props to the `Navbar` and `Footer` components.
+
+```diff lang="jsx" title="source/App.jsx"
+  import {
+  	StoryblokComponent,
+  	useStoryblok,
+  	useStoryblokApi,
+  } from '@storyblok/react';
+  import { useParams, useLocation } from 'react-router';
+  import { useState, useEffect } from 'react';
+  import NavBar from './storyblok/Navbar';
+  import Footer from './storyblok/Footer';
+
+  import { HSStaticMethods } from "preline/non-auto";
+
+  export default function App() {
+  	const { '*': slug } = useParams();
+  	const location = useLocation();
+
++ 	const [configData, setConfigData] = useState(null);
+
++  	// header/footer loader
++  	const storyblokApi = useStoryblokApi();
++  	useEffect(() => {
++  		async function loadConfig() {
++  			const resp = await storyblokApi.get('cdn/stories/config', {
++  				version: 'draft',
++  			});
++  			setConfigData(resp.data);
++  		}
++  		loadConfig();
++  	}, [storyblokApi]);
++
+  	const story = useStoryblok(slug || 'home', {
+  		version: 'draft',
+  	});
+
+  	useEffect(() => {
+  		HSStaticMethods.autoInit();
+  	}, [location.pathname, story?.content]);
+
+  	if (!story?.content) {
+  		return <div>Loading...</div>;
+  	}
+  	return (
+  		<>
++ 			<NavBar config={configData} />
+  			<StoryblokComponent blok={story.content} />
+- 			<footer>All rights reserved © {currentYear}</footer>
++ 			<Footer config={configData} />
+  		</>
+  	);
+  }
+```
+
+:::note
+To keep things simple, we fetch the draft version of our content. In production, you would want to fetch only published content. Learn more in our [tutorial on creating preview and production deployments](https://www.storyblok.com/tp/create-preview-production-environments-and-deploy).
+:::
+
+## Wrap up
+
+Congratulations! You've successfully built a Storyblok + React website with a multi-level navbar and a footer that you can configure in the Storyblok Visual Editor.
