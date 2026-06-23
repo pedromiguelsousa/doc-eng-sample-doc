@@ -652,11 +652,12 @@ Now that the content of the navbar and the footer is configured, load their conf
 Edit the `src/App.jsx` file to load the navbar and footer configuration only once via `useEffect()`. The configuration is then passed as props to the `Navbar` and `Footer` components.
 
 ```diff lang="jsx" title="src/App.jsx"
-import {
-	StoryblokComponent,
-	useStoryblok,
-	useStoryblokApi,
-} from '@storyblok/react';
+-import { StoryblokComponent, useStoryblok } from '@storyblok/react';
++import {
++	StoryblokComponent,
++	useStoryblok,
++	useStoryblokApi,
++} from '@storyblok/react';
 import { useParams, useLocation } from 'react-router';
 -import { useEffect } from 'react';
 +import { useEffect, useState } from 'react';
