@@ -468,7 +468,7 @@ import NavEntry from "./NavEntry";
 import NavSubmenu from "./NavSubmenu";
 
 export default function Navbar({ config: configData }) {
-  const navBarEntries = configData?.story?.content?.nav_items || [];
+  const navbarEntries = configData?.story?.content?.nav_items || [];
 
   return (
     <header className="relative flex flex-wrap sm:justify-start sm:flex-nowrap w-full py-3 bg-navbar border-b border-navbar-line">
@@ -533,7 +533,7 @@ export default function Navbar({ config: configData }) {
           role="region"
         >
           <div className="flex flex-col gap-5 mt-5 sm:flex-row sm:items-center sm:justify-end sm:mt-0 sm:ps-5">
-            {navBarEntries.map((item) => {
+            {navbarEntries.map((item) => {
               if (item.items?.length > 0) {
                 return (
                   <NavSubmenu key={item._uid} blok={item} topLevelNav={true} />
@@ -627,7 +627,7 @@ Edit the `src/App.jsx` file to load the navbar and footer configuration only onc
   } from '@storyblok/react';
   import { useParams, useLocation } from 'react-router';
   import { useState, useEffect } from 'react';
-  import NavBar from './storyblok/Navbar';
+  import Navbar from './storyblok/Navbar';
   import Footer from './storyblok/Footer';
 
   import { HSStaticMethods } from "preline/non-auto";
@@ -663,7 +663,7 @@ Edit the `src/App.jsx` file to load the navbar and footer configuration only onc
   	}
   	return (
   		<>
-+ 			<NavBar config={configData} />
++ 			<Navbar config={configData} />
   			<StoryblokComponent blok={story.content} />
 - 			<footer>All rights reserved © {currentYear}</footer>
 + 			<Footer config={configData} />
