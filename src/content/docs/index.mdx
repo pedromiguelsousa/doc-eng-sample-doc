@@ -580,7 +580,7 @@ export default function Footer({ config: configData }) {
 }
 ```
 
-The same React components in the navbar support both top-level and child-level entries; the same applies to the footer components. Since different HTML elements and CSS styles are required for top-level entries, a prop on these four React components specifies which components are at the top level.
+The `NavEntry` and `NavSubmenu` components support both top-level and child-level entries. The same applies to the footer components `FooterEntry` and `FooterSubmenu`. Since different HTML elements and CSS classes are required for top-level entries, a prop named `topLevelNav` on these four React components allows us to specify which navbar/footer elements are at the top level.
 
 :::tip
 While you could use different elements (and blocks) for the two different contexts, this strategy reduces the number of React components and the number of different blocks in your Storyblok space.
