@@ -217,6 +217,23 @@ body {
 @import "../node_modules/preline/css/themes/theme.css";
 ```
 
+In `src/storyblok/Grid.jsx`, update the `grid` class to `my-grid`:
+
+```diff lang="jsx" title="src/storyblok/Grid.jsx"
+import { StoryblokComponent, storyblokEditable } from '@storyblok/react';
+
+export default function Grid({ blok }) {
+	return (
+-		<div {...storyblokEditable(blok)} className="grid">
++		<div {...storyblokEditable(blok)} className="my-grid">
+			{blok.columns.map((nestedBlok) => (
+				<StoryblokComponent blok={nestedBlok} key={nestedBlok._uid} />
+			))}
+		</div>
+	);
+}
+```
+
 ## 4. Create React components in your application
 
 Next, add the React component counterparts for the Storyblok blocks you already created.
